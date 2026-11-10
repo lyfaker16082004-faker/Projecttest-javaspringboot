@@ -17,37 +17,30 @@ import com.javaweb.service.BuildingService;
 @Service
 public class BuildingServiceImpl implements BuildingService {
 	// Tiêm Repository vào Service
-    @Autowired
+	@Autowired
     private BuildingRepository buildingRepository;
+    
     @Autowired
     private DistrictRepository districtRepository;
 
-	@Override
-	public List<BuildingDTO> findAll(Map<String, Object> params, List<String> typeCode) {
-		List<BuildingEntity> buildingEntities = buildingRepository.findAll(params, typeCode);
-        List<BuildingDTO> result = new ArrayList<BuildingDTO>();
-
+    @Override
+    public List<BuildingDTO> findAll(Map<String, Object> params, List<String> typeCode) {
+        List<BuildingEntity> buildingEntities = buildingRepository.findAll(params, typeCode);
+        List<BuildingDTO> result = new ArrayList<>();
+        
         for (BuildingEntity item : buildingEntities) {
             BuildingDTO building = new BuildingDTO();
             building.setName(item.getName());
             
-            // Map các trường còn lại từ Entity sang DTO
-            building.setManagerName(item.getManagerName());
-            building.setManagerPhoneNumber(item.getManagerPhoneNumber());
-            building.setFloorArea(item.getFloorArea());
-            building.setRentPrice(item.getRentPrice());
-            building.setServiceFee(item.getServiceFee());
-            building.setBrokerageFee(item.getBrokerageFee());
-
-            // Tìm DistrictEntity qua id để lấy tên quận ghép vào địa chỉ
+            // Tìm tên quận từ DistrictRepository dựa vào districtid
             DistrictEntity districtEntity = districtRepository.findNameById(item.getDistrictid());
-            String districtName = (districtEntity != null && districtEntity.getName() != null) ? districtEntity.getName() : "";
-
-            building.setAddress(item.getStreet() + ", " + item.getWard() + ", " + districtName);
+            
+            // Ghép chuỗi địa chỉ: street + ward + districtName
+            building.setAddress(item.getStreet() + ", " + item.getWard() + ", " + districtEntity.getName());
+            
             result.add(building);
         }
-
         return result;
+    }
 
-	}
 }

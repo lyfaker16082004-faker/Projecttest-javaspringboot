@@ -7,5 +7,4 @@ import com.javaweb.entity.BuildingEntity;
 
 public interface BuildingRepository {
 	List<BuildingEntity> findAll(Map<String, Object> params, List<String> typeCode);
-	
 }
