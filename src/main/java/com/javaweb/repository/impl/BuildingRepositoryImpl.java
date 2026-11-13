@@ -8,20 +8,20 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.entity.BuildingEntity;
 import com.javaweb.repository.BuildingRepository;
+import com.javaweb.utils.ConnectionJDBCUtils;
 import com.javaweb.utils.NumberUntil;
 import com.javaweb.utils.StringUtil;
 
 @Repository // Đánh dấu đây là class làm việc với Database
 public class BuildingRepositoryImpl implements BuildingRepository {
 
-	static final String DB_URL = "jdbc:mysql://localhost:3306/estatebasic";
-    static final String USER = "root";
-    static final String PASS = "123456";
+
 
     public static void joinTable(Map<String, Object> params, List<String> typeCode, StringBuilder sql) {
         String staffId = (String) params.get("staffId");
@@ -66,10 +66,10 @@ public class BuildingRepositoryImpl implements BuildingRepository {
         String rentAreaFrom = (String) params.get("areaFrom");
         if (StringUtil.checkString(rentAreaFrom) || StringUtil.checkString(rentAreaTo)) {
             if (StringUtil.checkString(rentAreaFrom)) {
-                where.append(" AND rentarea.value >= " + rentAreaFrom);
+                where.append(" AND r.value >= " + rentAreaFrom);
             }
             if (StringUtil.checkString(rentAreaTo)) {
-                where.append(" AND rentarea.value <= " + rentAreaTo);
+                where.append(" AND r.value <= " + rentAreaTo);
             }
         }
         
@@ -84,9 +84,21 @@ public class BuildingRepositoryImpl implements BuildingRepository {
             }
         }
 
+        // java 7
         if (typeCode != null && typeCode.size() != 0) {
-            where.append(" AND renttype.code IN('" + String.join("','", typeCode) + "') ");
+        	List<String> code = new ArrayList<String>();
+        	for(String item: typeCode) {
+        		code.add("'" + item + "'");
+        	}
+            where.append(" AND renttype.code IN(" + String.join(",", typeCode) + ") ");
         }
+        // java 8
+		/*
+		 * if(typeCode != null && typeCode.size() != 0) { where.append(" AND("); String
+		 * sqlString = typeCode.stream().map(it -> "renttype.code Like" + "'%" + it +
+		 * "%'").collect(Collectors.joining(" or ")); where.append(" ) "); }
+		 */
+        
     }
 
     @Override
@@ -102,7 +114,7 @@ public class BuildingRepositoryImpl implements BuildingRepository {
         sql.append(where);
 
         List<BuildingEntity> result = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+        try (Connection conn = ConnectionJDBCUtils.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql.toString())) {
              
@@ -122,7 +134,5 @@ public class BuildingRepositoryImpl implements BuildingRepository {
         }
         return result;
     }
-
-	
 
 }
